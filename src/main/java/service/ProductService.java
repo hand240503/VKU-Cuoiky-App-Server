@@ -1,19 +1,20 @@
-package controller;
+package service;
 
 import java.util.List;
 
 import dao.ProductDAO;
 import model.Product;
+import model.Product_Price_Views;
 
-public class ProductController {
+public class ProductService {
 
 	private ProductDAO productDAO;
 
-	public ProductController() {
+	public ProductService() {
 		productDAO = new ProductDAO();
 	}
 
-	public List<Product> getAllProduct() {
+	public List<Product_Price_Views> getAllProduct() {
 		return productDAO.getAllProduct();
 	}
 }

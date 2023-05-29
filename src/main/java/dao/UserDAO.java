@@ -5,13 +5,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import model.Users;
+import model.User;
 
 public class UserDAO {
 
-	public Users getUser(String userName, String passWord) {
+	public User getUser(String userName, String passWord) {
 		Connection connection = DBConnect.getConnect();
-		String sql = "select TA_AUT_USER.I_ID TA_AUT_USER.T_Info_Name  from TA_AUT_USER WHERE T_USERNAME = ? and T_PASSWORD = ?";
+		String sql = "select TA_AUT_USER.I_ID , TA_AUT_USER.T_Info_Name  from TA_AUT_USER WHERE T_USERNAME = ? and T_PASSWORD = ?";
 		PreparedStatement statement;
 		try {
 			statement = connection.prepareStatement(sql);
@@ -20,9 +20,9 @@ public class UserDAO {
 
 			ResultSet rs = statement.executeQuery();
 			if (rs.next()) {
-				Users users = new Users();
-				users.setId(rs.getInt(0));
-				users.setUserName(rs.getString(3));
+				User users = new User();
+				users.setId(rs.getInt(1));
+				users.setUserName(rs.getString(2));
 
 				return users;
 			}

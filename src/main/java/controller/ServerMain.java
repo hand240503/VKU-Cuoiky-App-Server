@@ -1,4 +1,4 @@
-package socket;
+package controller;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,10 +9,9 @@ public class ServerMain {
 	public void startServer(int port) {
 		try {
 			ServerSocket serverSocket = new ServerSocket(port);
-			System.out.println("Server được khởi tạo tại port" + port);
+			System.out.println("Server được khởi tạo tại port " + port);
 			while (true) {
 				Socket socket = serverSocket.accept();
-				System.out.println("Vừa có kết nối tới");
 				ServerHandle serverHandle = new ServerHandle(socket);
 				serverHandle.start();
 			}
@@ -23,6 +22,6 @@ public class ServerMain {
 
 	public static void main(String[] args) {
 		ServerMain main = new ServerMain();
-		main.startServer(9999);
+		main.startServer(40123);
 	}
 }

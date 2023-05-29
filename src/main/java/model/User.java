@@ -1,16 +1,17 @@
 package model;
 
-public class Users {
+public class User {
 	private int id;
 	private String userName;
 
-	public Users() {
+	public User() {
 
 	}
 
-	public Users(int id, String userName) {
+	public User(int id, String userName) {
 		this.id = id;
 		this.userName = userName;
+
 	}
 
 	public int getId() {
