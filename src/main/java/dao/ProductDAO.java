@@ -59,8 +59,8 @@ public class ProductDAO {
 				+ "where product.I_ID = ? \r\n" + "ORDER by tkho.I_SUM_END asc\r\n" + "limit 1";
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql);
-			resultSet = preparedStatement.executeQuery();
 			preparedStatement.setInt(1, idProduct);
+			resultSet = preparedStatement.executeQuery();
 			if (resultSet.next()) {
 				int sumEnd = resultSet.getInt("I_SUM_END");
 				return sumEnd;

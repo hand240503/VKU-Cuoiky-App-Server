@@ -17,4 +17,8 @@ public class ProductService {
 	public List<Product_Price_Views> getAllProduct() {
 		return productDAO.getAllProduct();
 	}
+
+	public int getSumEnd(int id) {
+		return productDAO.getSumEnd(id);
+	}
 }
