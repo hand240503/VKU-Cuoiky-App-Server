@@ -3,6 +3,7 @@ package service;
 import java.util.List;
 
 import dao.ProductDAO;
+import model.DetailView;
 import model.Product;
 import model.Product_Price_Views;
 
@@ -20,5 +21,9 @@ public class ProductService {
 
 	public int getSumEnd(int id) {
 		return productDAO.getSumEnd(id);
+	}
+
+	public DetailView getView(int id) {
+		return productDAO.getDetailView(id);
 	}
 }

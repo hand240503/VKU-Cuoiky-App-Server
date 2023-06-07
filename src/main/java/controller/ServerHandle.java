@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,9 +14,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import model.DetailView;
 import model.Notify;
+import model.OrderDetail;
 import model.Orders;
 import model.Product_Price_Views;
+import model.Stock;
 import model.User;
 import service.OrdersService;
 import service.ProductService;
@@ -29,6 +34,7 @@ public class ServerHandle extends Thread {
 	private UserService userService;
 	private ProductService productService;
 	private OrdersService ordersService;
+	private int id_User;
 
 	public ServerHandle(Socket socket) {
 		this.socket = socket;
@@ -52,29 +58,51 @@ public class ServerHandle extends Thread {
 
 			while (true) {
 				int jsonLength = dis.readInt();
-
+				System.out.println(jsonLength);
 				byte[] jsonBytes = new byte[jsonLength];
 				dis.readFully(jsonBytes);
 				String json = new String(jsonBytes);
-
+				System.out.println(json);
 				JsonElement jsonElement = JsonParser.parseString(json);
 				JsonObject jsonObject = jsonElement.getAsJsonObject();
 				String notifyMode = jsonObject.get("notify").getAsString();
+
 				if (notifyMode.equals("Sv_login")) {
 					handleLoginRequest(jsonObject);
 				}
 				if (notifyMode.equals("Create-order")) {
 					handleCreateOrderRequest(jsonObject);
 				}
-				if (notifyMode.equals("Create-order-detail")) {
-					handleCreateDetailRequest(jsonObject);
+
+				if (notifyMode.equals("send-view")) {
+					JsonElement data = jsonObject.get("data");
+					JsonObject dataObject = data.getAsJsonObject();
+
+					int idPrice = dataObject.get("idPrice").getAsInt();
+					id_User = dataObject.get("idUser").getAsInt();
+					DetailView detailView = productService.getView(idPrice);
+					detailView.setIdUser(id_User);
+					detailView.setIdPrice(idPrice);
+					int sumEnd = productService.getSumEnd(detailView.getIdproduct());
+					detailView.setQuantity(sumEnd);
+					Notify notify = new Notify();
+					notify.setNotify("view-detail");
+					notify.setData(detailView);
+
+					String notifyToClient = gson.toJson(notify);
+					byte[] jsonUserBytes = notifyToClient.getBytes();
+
+					synchronized (dos) {
+						dos.writeInt(jsonUserBytes.length);
+						dos.write(jsonUserBytes);
+						dos.flush();
+					}
+
 				}
-//				if (notifyMode.equals("get-sum-end")) {
-//					getSum(jsonObject);
-//				}
-				if(notifyMode.equals("load-view-order")) {
-					System.out.println(jsonObject);
+				if (notifyMode.equals("Create-order-dt")) {
+					handleCreateOrderRequest(jsonObject);
 				}
+
 			}
 		} catch (IOException e) {
 
@@ -85,7 +113,6 @@ public class ServerHandle extends Thread {
 	public void handleLoginRequest(JsonObject jsonObject) throws IOException {
 		JsonElement data = jsonObject.get("data");
 		JsonObject dataObject = data.getAsJsonObject();
-		System.out.println(dataObject);
 		String userName = dataObject.get("userName").getAsString();
 		String password = dataObject.get("passWord").getAsString();
 		User user = userService.getUsers(userName, password);
@@ -95,6 +122,7 @@ public class ServerHandle extends Thread {
 			notifyModel.setNotify("login-success");
 			notifyModel.setData(pViews);
 			notifyModel.setContent(user.getId() + "");
+			id_User = user.getId();
 		} else {
 			notifyModel.setNotify("login-failed");
 			notifyModel.setContent("Vui lòng kiểm tra tài khoản (mật khẩu)");
@@ -114,57 +142,39 @@ public class ServerHandle extends Thread {
 
 		JsonElement data = jsonObject.get("data");
 		JsonObject dataObject = data.getAsJsonObject();
+		System.out.println(dataObject);
+		int quantity = dataObject.get("quantity").getAsInt();
+		int idPrice = dataObject.get("id_price").getAsInt();
+		int idProduct = dataObject.get("id_product").getAsInt();
 
-		String date = dataObject.get("date").getAsString();
-		int idUser = dataObject.get("id_user").getAsInt();
-		int type = dataObject.get("type").getAsInt();
+		int sumEnd = productService.getSumEnd(idProduct);
+
+		LocalDate currentDate = LocalDate.now();
 
 		Orders orders = new Orders();
-		orders.setDate(date);
-		orders.setId_user(idUser);
-		orders.setType(type);
-		ordersService.createOrder(orders);
-		int idOrder = ordersService.getIdOrder(idUser);
-		Notify notifyModel = new Notify();
-		notifyModel.setNotify("getID-order");
-		notifyModel.setData(idOrder);
-		String notifyToClient = gson.toJson(notifyModel);
-		byte[] jsonUserBytes = notifyToClient.getBytes();
-
-		synchronized (dos) {
-			dos.writeInt(jsonUserBytes.length);
-			dos.write(jsonUserBytes);
-			dos.flush();
-		}
-	}
-
-	public void handleCreateDetailRequest(JsonObject jsonObject) {
-		JsonElement data = jsonObject.get("data");
-		JsonObject dataObject = data.getAsJsonObject();
-	}
-
-	public void getSum(JsonObject jsonObject) throws IOException {
-		int id = jsonObject.get("data").getAsInt();
-		int sumEnd = productService.getSumEnd(id);
-
-		Notify notifyModel = new Notify();
-		notifyModel.setNotify("sum-end-product");
-		notifyModel.setData(sumEnd);
-
-		String notifyToClient = gson.toJson(notifyModel);
-		byte[] jsonUserBytes = notifyToClient.getBytes();
-
-		synchronized (dos) {
-			dos.writeInt(jsonUserBytes.length);
-			dos.write(jsonUserBytes);
-			dos.flush();
+		orders.setDate(currentDate.toString());
+		orders.setId_user(id_User);
+		orders.setType(1);
+		int idOrder = ordersService.getIdOrder(id_User, currentDate.toString());
+		if (idOrder == -1) {
+			idOrder = ordersService.createOrder(orders);
 		}
 
+		OrderDetail detail = new OrderDetail();
+		detail.setDate(currentDate.toString());
+		detail.setId_order(idOrder);
+		detail.setId_price(idPrice);
+		detail.setId_product(idProduct);
+		int idOrderDetail = ordersService.insertOrderdetail(detail);
+
+		Stock stock = new Stock();
+		stock.setId_order_detail(idOrderDetail);
+		stock.setSum_begin(sumEnd);
+		stock.setSum_end(sumEnd - quantity);
+		stock.setRatio_unit(1);
+
+		ordersService.insertStock(stock);
+
 	}
 
-	public void viewsOrderdetail(JsonObject jsonObject) {
-		JsonElement data = jsonObject.get("data");
-		JsonObject dataObject = data.getAsJsonObject();
-		System.out.println(dataObject);
-	}
 }

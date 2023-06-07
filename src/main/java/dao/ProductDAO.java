@@ -8,14 +8,16 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import model.DetailView;
 import model.Product;
 import model.Product_Price_Views;
+import model.Stock;
 
 public class ProductDAO {
 
 	private Statement statement = null;
 	private ResultSet resultSet = null;
-
+	
 	public List<Product_Price_Views> getAllProduct() {
 
 		List<Product_Price_Views> Product_Price_Views = new ArrayList<Product_Price_Views>();
@@ -72,4 +74,35 @@ public class ProductDAO {
 		return 0;
 	}
 
+	public DetailView getDetailView(int id) {
+		Connection connection = DBConnect.getConnect();
+		String sql = "" + "Select tapro.I_ID , tapro.T_NAME_PRODUCT ,taunit.T_LABEL , taunit.I_RATIO , gia.F_VALUE \r\n"
+				+ "from TA_AUT_PRICE gia\r\n" + "	inner join TA_AUT_UNIT taunit on taunit.I_ID = gia.I_ID_UNIT \r\n"
+				+ "	inner join TA_AUT_PRODUCT tapro on taunit.I_ID_PRODUCT  = tapro.I_ID \r\n"
+				+ "where gia.I_ID = ? and gia.I_TYPE = 1";
+
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setInt(1, id);
+			resultSet = preparedStatement.executeQuery();
+			while (resultSet.next()) {
+				DetailView detailView = new DetailView();
+				detailView.setIdproduct(resultSet.getInt("I_ID"));
+				detailView.setNameProduct(resultSet.getString("T_NAME_PRODUCT"));
+				detailView.setNameUnit(resultSet.getString("T_LABEL"));
+				detailView.setRatio(resultSet.getInt("I_RATIO"));
+				detailView.setValue(resultSet.getDouble("F_VALUE"));
+
+				return detailView;
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return null;
+
+	}
+
+	
 }
