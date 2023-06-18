@@ -6,16 +6,19 @@ public class DetailView {
 	private String nameUnit;
 	private int ratio;
 	private double value;
-	
+
 	private int idPrice;
 	private int idUser;
+	private int status;
 
 	public DetailView() {
 
 	}
+
 	private int quantity;
+
 	public DetailView(int idproduct, String nameProduct, String nameUnit, int ratio, double value, int quantity,
-			int idPrice, int idUser) {
+			int idPrice, int idUser, int status) {
 		this.idproduct = idproduct;
 		this.nameProduct = nameProduct;
 		this.nameUnit = nameUnit;
@@ -24,6 +27,7 @@ public class DetailView {
 		this.idUser = idUser;
 		this.idPrice = idPrice;
 		this.quantity = quantity;
+		this.status = status;
 	}
 
 	public int getQuantity() {
@@ -89,7 +93,14 @@ public class DetailView {
 	public void setIdUser(int idUser) {
 		this.idUser = idUser;
 	}
-	
-	
 
+	public int getStatus() {
+		return status;
+	}
+
+	public void setStatus(int status) {
+		this.status = status;
+	}
+
+	
 }

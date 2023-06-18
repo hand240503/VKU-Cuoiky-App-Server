@@ -21,6 +21,7 @@ import model.Orders;
 import model.Product_Price_Views;
 import model.Stock;
 import model.User;
+import model.UserDetailView;
 import service.OrdersService;
 import service.ProductService;
 import service.UserService;
@@ -103,6 +104,33 @@ public class ServerHandle extends Thread {
 					handleCreateOrderRequest(jsonObject);
 				}
 
+				if (notifyMode.equals("get-userOrder")) {
+					int id = jsonObject.get("data").getAsInt();
+					List<UserDetailView> list = ordersService.getUserOrder(id);
+					Notify notify = new Notify();
+					notify.setNotify("list-userOrder");
+					notify.setData(list);
+
+					String notifyToClient = gson.toJson(notify);
+					byte[] jsonUserBytes = notifyToClient.getBytes();
+
+					synchronized (dos) {
+						dos.writeInt(jsonUserBytes.length);
+						dos.write(jsonUserBytes);
+						dos.flush();
+					}
+
+				}
+				if (notifyMode.equals("cancel-order")) {
+					int id = jsonObject.get("data").getAsInt();
+					Stock stock = ordersService.getTonKho(id);
+					int soLuong = ordersService.getSoluong(id);
+					ordersService.cancelOrderdetail(id);
+					ordersService.updateStock(stock.getId(), stock.getSum_begin() + soLuong,
+							stock.getSum_end() + soLuong);
+					
+				}
+
 			}
 		} catch (IOException e) {
 
@@ -165,6 +193,7 @@ public class ServerHandle extends Thread {
 		detail.setId_order(idOrder);
 		detail.setId_price(idPrice);
 		detail.setId_product(idProduct);
+		detail.setStatus(1);
 		int idOrderDetail = ordersService.insertOrderdetail(detail);
 
 		Stock stock = new Stock();
