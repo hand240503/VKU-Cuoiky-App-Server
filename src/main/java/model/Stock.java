@@ -6,17 +6,18 @@ public class Stock {
 	private int sum_begin;
 	private int sum_end;
 	private int ratio_unit;
-
+	private String nameProduct;
 	public Stock() {
 
 	}
 
-	public Stock(int id, int id_order_detail, int sum_begin, int sum_end, int ratio_unit) {
+	public Stock(int id, int id_order_detail, int sum_begin, int sum_end, int ratio_unit,String nameProduct) {
 		this.id = id;
 		this.id_order_detail = id_order_detail;
 		this.sum_begin = sum_begin;
 		this.sum_end = sum_end;
 		this.ratio_unit = ratio_unit;
+		this.nameProduct = nameProduct;
 	}
 
 	public int getId() {
@@ -59,4 +60,13 @@ public class Stock {
 		this.ratio_unit = ratio_unit;
 	}
 
+	public String getNameProduct() {
+		return nameProduct;
+	}
+
+	public void setNameProduct(String nameProduct) {
+		this.nameProduct = nameProduct;
+	}
+
+	
 }

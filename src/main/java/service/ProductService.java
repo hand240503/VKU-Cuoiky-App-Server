@@ -3,9 +3,11 @@ package service;
 import java.util.List;
 
 import dao.ProductDAO;
+import model.AdminProduct;
 import model.DetailView;
 import model.Product;
 import model.Product_Price_Views;
+import model.Stock;
 
 public class ProductService {
 
@@ -26,4 +28,21 @@ public class ProductService {
 	public DetailView getView(int id) {
 		return productDAO.getDetailView(id);
 	}
+
+	public List<Stock> getStock() {
+		return productDAO.getStock();
+	}
+
+	public List<AdminProduct> getAdminProducts() {
+		return productDAO.getAdminProducts();
+	}
+
+	public List<AdminProduct> getNoneAccept() {
+		return productDAO.getNoneAccept();
+	}
+
+	public int acceptOrder(int id) {
+		return productDAO.acceptOrder(id);
+	}
+
 }

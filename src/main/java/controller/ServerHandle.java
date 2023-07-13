@@ -14,6 +14,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import model.AdminProduct;
 import model.DetailView;
 import model.Notify;
 import model.OrderDetail;
@@ -59,7 +60,6 @@ public class ServerHandle extends Thread {
 
 			while (true) {
 				int jsonLength = dis.readInt();
-				System.out.println(jsonLength);
 				byte[] jsonBytes = new byte[jsonLength];
 				dis.readFully(jsonBytes);
 				String json = new String(jsonBytes);
@@ -74,7 +74,21 @@ public class ServerHandle extends Thread {
 				if (notifyMode.equals("Create-order")) {
 					handleCreateOrderRequest(jsonObject);
 				}
+				if (notifyMode.equals("get-list-ad-pro")) {
+					List<AdminProduct> listAdminProducts = productService.getAdminProducts();
+					Notify notify = new Notify();
+					notify.setNotify("send-list-ad-pro");
+					notify.setData(listAdminProducts);
 
+					String notifyToClient = gson.toJson(notify);
+					byte[] jsonUserBytes = notifyToClient.getBytes();
+
+					synchronized (dos) {
+						dos.writeInt(jsonUserBytes.length);
+						dos.write(jsonUserBytes);
+						dos.flush();
+					}
+				}
 				if (notifyMode.equals("send-view")) {
 					JsonElement data = jsonObject.get("data");
 					JsonObject dataObject = data.getAsJsonObject();
@@ -105,11 +119,13 @@ public class ServerHandle extends Thread {
 				}
 
 				if (notifyMode.equals("get-userOrder")) {
-					int id = jsonObject.get("data").getAsInt();
+					int id = jsonObject.get("id").getAsInt();
 					List<UserDetailView> list = ordersService.getUserOrder(id);
 					Notify notify = new Notify();
 					notify.setNotify("list-userOrder");
+					notify.setId(id);
 					notify.setData(list);
+					id_User = id;
 
 					String notifyToClient = gson.toJson(notify);
 					byte[] jsonUserBytes = notifyToClient.getBytes();
@@ -121,16 +137,81 @@ public class ServerHandle extends Thread {
 					}
 
 				}
+				if (notifyMode.equals("get-list-none-accept")) {
+					List<AdminProduct> listAdminProducts = productService.getNoneAccept();
+
+					Notify notify = new Notify();
+					notify.setNotify("send-list-none-accept");
+					notify.setData(listAdminProducts);
+
+					String notifyToClient = gson.toJson(notify);
+					byte[] jsonUserBytes = notifyToClient.getBytes();
+
+					synchronized (dos) {
+						dos.writeInt(jsonUserBytes.length);
+						dos.write(jsonUserBytes);
+						dos.flush();
+					}
+
+				}
+				if (notifyMode.equals("accept-order-ad")) {
+					int id = jsonObject.get("id").getAsInt();
+					int isUpdated = productService.acceptOrder(id);
+					if (isUpdated == 0) {
+						Notify notify = new Notify();
+						notify.setNotify("do-not-accept");
+
+						String notifyToClient = gson.toJson(notify);
+						byte[] jsonUserBytes = notifyToClient.getBytes();
+
+						synchronized (dos) {
+							dos.writeInt(jsonUserBytes.length);
+							dos.write(jsonUserBytes);
+							dos.flush();
+						}
+					}
+				}
 				if (notifyMode.equals("cancel-order")) {
 					int id = jsonObject.get("data").getAsInt();
-					Stock stock = ordersService.getTonKho(id);
-					int soLuong = ordersService.getSoluong(id);
-					ordersService.cancelOrderdetail(id);
-					ordersService.updateStock(stock.getId(), stock.getSum_begin() + soLuong,
-							stock.getSum_end() + soLuong);
-					
+
+					int check = ordersService.checkCancel(id);
+					if (check == 0) {
+						Stock stock = ordersService.getTonKho(id);
+						int soLuong = ordersService.getSoluong(id);
+						ordersService.cancelOrderdetail(id);
+						ordersService.updateStock(stock.getId(), stock.getSum_begin() + soLuong,
+								stock.getSum_end() + soLuong);
+					} else if (check == 1) {
+						Notify notify = new Notify();
+						notify.setNotify("not-cancel");
+						String notifyToClient = gson.toJson(notify);
+						byte[] jsonUserBytes = notifyToClient.getBytes();
+
+						synchronized (dos) {
+							dos.writeInt(jsonUserBytes.length);
+							dos.write(jsonUserBytes);
+							dos.flush();
+						}
+					}
+
 				}
 
+				if (notifyMode.equals("get-list-ad-stk")) {
+					List<Stock> listStocks = productService.getStock();
+					Notify notify = new Notify();
+					notify.setNotify("send-list-ad-stock");
+					notify.setData(listStocks);
+
+					String notifyToClient = gson.toJson(notify);
+					byte[] jsonUserBytes = notifyToClient.getBytes();
+
+					synchronized (dos) {
+						dos.writeInt(jsonUserBytes.length);
+						dos.write(jsonUserBytes);
+						dos.flush();
+					}
+
+				}
 			}
 		} catch (IOException e) {
 
@@ -146,11 +227,19 @@ public class ServerHandle extends Thread {
 		User user = userService.getUsers(userName, password);
 		Notify notifyModel = new Notify();
 		if (user != null) {
-			List<Product_Price_Views> pViews = productService.getAllProduct();
-			notifyModel.setNotify("login-success");
-			notifyModel.setData(pViews);
-			notifyModel.setContent(user.getId() + "");
-			id_User = user.getId();
+			if (user.getMode() == 1) {
+				List<Product_Price_Views> pViews = productService.getAllProduct();
+				notifyModel.setNotify("login-success-mode-1");
+				notifyModel.setData(pViews);
+				notifyModel.setContent(user.getId() + "");
+				id_User = user.getId();
+			}
+			if (user.getMode() == 0) {
+				List<AdminProduct> listAdminProducts = productService.getAdminProducts();
+				notifyModel.setNotify("login-success-mode-2");
+				notifyModel.setData(listAdminProducts);
+			}
+
 		} else {
 			notifyModel.setNotify("login-failed");
 			notifyModel.setContent("Vui lòng kiểm tra tài khoản (mật khẩu)");

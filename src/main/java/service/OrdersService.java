@@ -51,4 +51,8 @@ public class OrdersService {
 	public void cancelOrderdetail(int id) {
 		orderDAO.cancelOrderdetail(id);
 	}
+	
+	public int checkCancel(int id) {
+		return orderDAO.checkCancel(id);
+	}
 }

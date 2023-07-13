@@ -2,6 +2,7 @@ package model;
 
 public class Notify {
 	private String notify;
+	private int id;
 	private Object data;
 	private String content;
 
@@ -23,6 +24,14 @@ public class Notify {
 		this.notify = notify;
 	}
 
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
 	public Object getData() {
 		return data;
 	}
@@ -39,5 +48,4 @@ public class Notify {
 		this.content = content;
 	}
 
-	
 }

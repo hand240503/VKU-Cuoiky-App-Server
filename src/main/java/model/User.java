@@ -3,7 +3,7 @@ package model;
 public class User {
 	private int id;
 	private String userName;
-
+	private int mode;
 	public User() {
 
 	}
@@ -29,5 +29,14 @@ public class User {
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+
+	public int getMode() {
+		return mode;
+	}
+
+	public void setMode(int mode) {
+		this.mode = mode;
+	}
+	
 
 }

@@ -68,7 +68,8 @@ public class OrdersDAO {
 
 	public int insertOrderdetails(OrderDetail orderDetail) {
 		Connection connection = DBConnect.getConnect();
-		String sql = "INSERT INTO TA_AUT_ORDER_DETAIL (I_ID_ORDER , I_ID_PRODUCT , I_ID_PRICE , D_DATE_NEW , I_STATUS) VALUES (?,?,?,?,?)";
+		String sql = "INSERT INTO TA_AUT_ORDER_DETAIL (I_ID_ORDER , I_ID_PRODUCT , I_ID_PRICE , D_DATE_NEW , I_STATUS , I_ACCEPT) VALUES (?,?,?,?,?,0"
+				+ ")";
 		try {
 			PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 			preparedStatement.setInt(1, orderDetail.getId_order());
@@ -227,5 +228,24 @@ public class OrdersDAO {
 			e.printStackTrace();
 		}
 
+	}
+
+	public int checkCancel(int id) {
+		int check = 0;
+		Connection connection = DBConnect.getConnect();
+		String sql = "SELECT dhct.I_ACCEPT \r\n" + "FROM TA_AUT_ORDER_DETAIL dhct\r\n" + "WHERE dhct.I_ID = ?";
+		try {
+			PreparedStatement preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setInt(1, id);
+			resultSet = preparedStatement.executeQuery();
+			while (resultSet.next()) {
+				check = resultSet.getInt(1);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return check;
 	}
 }
